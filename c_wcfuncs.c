@@ -22,9 +22,15 @@
 // being unsigned (in the range 0..255)
 uint32_t wc_hash(const unsigned char *w) {
   uint32_t hash_code = 5381;
-  for (int i = 0; w[i] != '\0'; i++) {
-    hash_code = hash_code * 33 + w[i];
+  // for (int i = 0; w[i] != '\0'; i++) {
+  //   hash_code = hash_code * 33 + w[i];
+  // }
+
+  while (*w != '\0') {
+    hash_code = hash_code * 33 + *w;
+    w++;
   }
+
   return hash_code;
 }
 
@@ -39,7 +45,7 @@ uint32_t wc_hash(const unsigned char *w) {
 // of the other, it is considered as "less than". E.g.,
 // "hi" would compare as less than "high".
 int wc_str_compare(const unsigned char *lhs, const unsigned char *rhs) {
-  // TODO: implement
+  
 }
 
 // Copy NUL-terminated source string to the destination buffer.
@@ -59,13 +65,17 @@ void wc_str_copy(unsigned char *dest, const unsigned char *source) {
 //   '\f'
 //   '\v'
 int wc_isspace(unsigned char c) {
-  // TODO: implement
+  if (c == ' ' || c == '\t' || c == '\r' || c == '\n' || c == '\f' || c == '\v') {
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 // Return 1 if the character code in c is an alphabetic character
 // ('A' through 'Z' or 'a' through 'z'), 0 otherwise.
 int wc_isalpha(unsigned char c) {
-  // TODO: implement
+
 }
 
 // Read the next word from given input stream, storing
@@ -80,7 +90,22 @@ int wc_isalpha(unsigned char c) {
 // MAX_WORDLEN characters, then only the first MAX_WORDLEN
 // characters in the sequence should be stored in the array.
 int wc_readnext(FILE *in, unsigned char *w) {
-  // TODO: implement
+  // Set w to be an array of MAX_WORDLEN + 1 size
+  w = malloc(sizeof(unsigned char) * (MAX_WORDLEN + 1));
+  w[MAX_WORDLEN] = '\0';
+
+  if (feof(in)) {
+    return 0;
+  }
+  // While current character in in is not a whitespace or EOF
+  while (!wc_isspace(fgetc(in)) && !feof(in) && *w != '\0') {
+    // Add current character to w
+    *w = fgetc(in);
+    w++;
+  }
+  // Set the next character to be a NUL character
+  *w = '\0';
+  return 1;
 }
 
 // Convert the NUL-terminated character string in the array
@@ -92,7 +117,7 @@ void wc_tolower(unsigned char *w) {
 // Remove any non-alphaabetic characters from the end of the
 // NUL-terminated character string pointed-to by w.
 void wc_trim_non_alpha(unsigned char *w) {
-  // TODO: implement
+
 }
 
 // Search the specified linked list of WordEntry objects for an object
