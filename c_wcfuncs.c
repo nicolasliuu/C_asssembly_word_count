@@ -112,34 +112,53 @@ int wc_isalpha(unsigned char c) {
 // MAX_WORDLEN characters, then only the first MAX_WORDLEN
 // characters in the sequence should be stored in the array.
 int wc_readnext(FILE *in, unsigned char *w) {
-  // Set w to be an array of MAX_WORDLEN + 1 size
-  w = malloc(sizeof(unsigned char) * (MAX_WORDLEN + 1));
-  w[MAX_WORDLEN] = '\0';
 
+  // Assume w points to an array of MAX_WORDLEN+1 elements
+  
   if (feof(in)) {
     return 0;
   }
+
+  int pos = 0;
+  char current_char = fgetc(in);
   // While current character in in is not a whitespace or EOF
-  while (!wc_isspace(fgetc(in)) && !feof(in) && *w != '\0') {
+  while (!wc_isspace(current_char) && !feof(in) && pos < MAX_WORDLEN) {
     // Add current character to w
-    *w = fgetc(in);
-    w++;
+    w[pos] = current_char;
+    pos++;
+    current_char = fgetc(in); // Get next character
   }
-  // Set the next character to be a NUL character
-  *w = '\0';
+
+  // Add a null terminator when the loop ends
+  w[pos] = '\0';
   return 1;
 }
 
 // Convert the NUL-terminated character string in the array
 // pointed-to by w so that every letter is lower-case.
 void wc_tolower(unsigned char *w) {
-  // TODO: implement
+  // Loop through the array and if the char is uppercase, add 32 to it
+  while (*w != '\0') {
+    if (*w >= 65 && *w <= 90) {
+      *w += 32;
+    }
+    w++;
+  }
 }
 
 // Remove any non-alphaabetic characters from the end of the
 // NUL-terminated character string pointed-to by w.
 void wc_trim_non_alpha(unsigned char *w) {
-
+  // Start at the end of the character string and go backwards
+  int pos = 0;
+  while (w[pos] != '\0') {
+    pos++;
+  }
+  pos--; // pos is now the index of the last character in the string
+  while (pos >= 0 && !(wc_isalpha(w[pos]))) {
+    w[pos] = '\0';
+    pos--;
+  }
 }
 
 // Search the specified linked list of WordEntry objects for an object
