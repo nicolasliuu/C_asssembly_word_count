@@ -21,7 +21,11 @@
 // Note that the character values should be treated as
 // being unsigned (in the range 0..255)
 uint32_t wc_hash(const unsigned char *w) {
-  // TODO: implement
+  uint32_t hash_code = 5381;
+  for (int i = 0; w[i] != '\0'; i++) {
+    hash_code = hash_code * 33 + w[i];
+  }
+  return hash_code;
 }
 
 // Compare two strings lexicographically. Return
