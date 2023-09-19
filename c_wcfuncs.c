@@ -38,13 +38,32 @@ uint32_t wc_hash(const unsigned char *w) {
 // order, but using character codes. If one string is a prefix
 // of the other, it is considered as "less than". E.g.,
 // "hi" would compare as less than "high".
-int wc_str_compare(const unsigned char *lhs, const unsigned char *rhs) {
-  // TODO: implement
+int wc_str_compare(const unsigned char *lhs, const unsigned char *rhs) {  
+  while ((*lhs != '\0' || *rhs != '\0')){
+    if (*lhs == *rhs) {
+      lhs++;
+      rhs++;
+    } else if ((*lhs == '\0' && *rhs != '\0') || (*lhs != '\0' && *rhs == '\0') || (*lhs != *rhs)) {
+      return *lhs - *rhs;
+    } 
+
+  }
+  return 0;
+  //loop thru each string as long as pointer not at the end
+    //if lhs char == rhs char, increment both
+    //else add up sum of all characters in lhs and all characters in rhs and compute difference
+      //return difference
+  //return 0
 }
 
 // Copy NUL-terminated source string to the destination buffer.
 void wc_str_copy(unsigned char *dest, const unsigned char *source) {
   // TODO: implement
+  while (*source != '\0') {
+    *dest = *source;
+    dest++;
+    source++;
+  }
 }
 
 // Return 1 if the character code in c is a whitespace character,
