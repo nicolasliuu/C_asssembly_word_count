@@ -216,10 +216,20 @@ struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned n
   int index = hash_code % num_buckets;
 
   // Find or insert the WordEntry object for the given string (s), returning a pointer to it.
-  return wc_find_or_insert(buckets[index], s, NULL);
+  int inserted = 0;
+  struct WordEntry *entry = wc_find_or_insert(buckets[index], s, &inserted);
+  if (inserted == 1) {
+    buckets[index] = entry;
+  }
+  return entry;
 }
 
 // Free all of the nodes in given linked list of WordEntry objects.
 void wc_free_chain(struct WordEntry *p) {
-  // TODO: implement
+  struct WordEntry *temp = p;
+  while (p != NULL) {
+    temp = p->next;
+    free(p);
+    p = temp;
+  }
 }
