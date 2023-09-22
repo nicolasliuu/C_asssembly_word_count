@@ -179,7 +179,6 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     // If match is found, set inserted to 0, return pointer to matching object
     struct WordEntry *cursor = head;
     
-    // struct cursor = head;
     while (cursor != NULL) {
       if (wc_str_compare(cursor->word, s) == 0) {
         *inserted = 0;
@@ -190,10 +189,16 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
-    wc_str_copy(new_node->word, s); // This line not working
+    // Make sure new_node->word doesn't have garbage in it
+    for (int i = 0; i < MAX_WORDLEN + 1; i++) {
+      new_node->word[i] = '\0';
+    }
+    
+    wc_str_copy(new_node->word, s); 
     new_node->next = head;
     new_node->count = 0;
     *inserted = 1;
+    
     return new_node;
 }
 
@@ -205,7 +210,13 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
 // Returns a pointer to the WordEntry object in the appropriate linked list
 // which represents s.
 struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned num_buckets, const unsigned char *s) {
-  // TODO: implement
+  // Hash the string s
+  uint32_t hash_code = wc_hash(s);
+  // Find the index of the bucket
+  int index = hash_code % num_buckets;
+
+  // Find or insert the WordEntry object for the given string (s), returning a pointer to it.
+  return wc_find_or_insert(buckets[index], s, NULL);
 }
 
 // Free all of the nodes in given linked list of WordEntry objects.
