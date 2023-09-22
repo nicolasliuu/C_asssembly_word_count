@@ -175,6 +175,26 @@ void wc_trim_non_alpha(unsigned char *w) {
 // job to update the count.)
 struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char *s, int *inserted) {
   // TODO: implement
+  // Start at head, linear search through linkedlist until match is found
+    // If match is found, set inserted to 0, return pointer to matching object
+    struct WordEntry *cursor = head;
+    
+    // struct cursor = head;
+    while (cursor != NULL) {
+      if (wc_str_compare(cursor->word, s) == 0) {
+        *inserted = 0;
+        return cursor;
+      } else {
+        cursor = cursor->next;
+      }
+    }
+    // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
+    struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
+    wc_str_copy(new_node->word, s); // This line not working
+    new_node->next = head;
+    new_node->count = 0;
+    *inserted = 1;
+    return new_node;
 }
 
 // Find or insert the WordEntry object for the given string (s), returning
