@@ -26,16 +26,26 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  //   while ( next word is read successfully using wc_readnext ) {
-  //   increase total word count by 1
+  unsigned char curr_word[MAX_WORDLEN + 1];
+  while (wc_readnext(fp, curr_word)) {
+    //   increase total word count by 1
+    total_words++;
+  
+    //   use wc_tolower to convert word to lower case
+    wc_tolower(curr_word);
 
-  //   use wc_tolower to convert word to lower case
+    //   use wc_trim_non_alpha to remove non-alphabetic characters at end of word
+    wc_trim_non_alpha(curr_word);
 
-  //   use wc_trim_non_alpha to remove non-alphabetic characters at end of word
+    //   use wc_dict_find_or_insert to find or insert the word in the hash table
+    int inserted = 0;
+    struct WordEntrywc_dict_find_or_insert(hashtable, curr_word, &inserted);
+    if (inserted == 1) {
+      unique_words++;
+    }
 
-  //   use wc_dict_find_or_insert to find or insert the word in the hash table
+    // increment the WordEntry's count
 
-  //   increment the WordEntry's count
   // }
 
   printf("Total words read: %u\n", (unsigned int) total_words);

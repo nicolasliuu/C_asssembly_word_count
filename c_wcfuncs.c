@@ -196,7 +196,6 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     
     wc_str_copy(new_node->word, s); 
     new_node->next = head;
-    new_node->count = 0;
     *inserted = 1;
     
     return new_node;
