@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
 
     //   use wc_dict_find_or_insert to find or insert the word in the hash table
     int inserted = 0;
-    struct WordEntrywc_dict_find_or_insert(hashtable, curr_word, &inserted);
+    struct WordEntry *word = wc_dict_find_or_insert(hashtable, curr_word, &inserted);
     if (inserted == 1) {
       unique_words++;
     }
@@ -56,6 +56,7 @@ int main(int argc, char **argv) {
   // TODO: make sure memory is freed
 
   return 0;
+}
 }
 
 // TODO: definitions of helper functions
