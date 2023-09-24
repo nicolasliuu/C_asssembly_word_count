@@ -17,12 +17,21 @@ int main(int argc, char **argv) {
 
   // Initialize hash table
   struct WordEntry *hashtable[HASHTABLE_SIZE];
+  for (int i = 0; i < HASHTABLE_SIZE; i++) {
+    hashtable[i] = NULL;
+  }
 
   // Open input file
-  FILE *fp = fopen(argv[1], "r");
-  if (fp == NULL) {
-    fprintf(stderr, "Error: failed to open file '%s'\n", argv[1]);
-    return 1;
+  FILE *fp;
+  if (argc > 1) {
+    fp = fopen(argv[1], "r");
+    if (fp == NULL) {
+      fprintf(stderr, "Error: failed to open file '%s'\n", argv[1]);
+      return 1;
+    }
+  } else {
+    // Use stdin
+    fp = stdin;
   }
 
   unsigned char curr_word[MAX_WORDLEN + 1];

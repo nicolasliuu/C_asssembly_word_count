@@ -121,6 +121,9 @@ int wc_readnext(FILE *in, unsigned char *w) {
 
   int pos = 0;
   char current_char = fgetc(in);
+  if (wc_isspace(current_char)) {
+    return 0;
+  }
   // While current character in in is not a whitespace or EOF
   while (!wc_isspace(current_char) && !feof(in) && pos < MAX_WORDLEN) {
     // Add current character to w
