@@ -115,14 +115,14 @@ int wc_readnext(FILE *in, unsigned char *w) {
 
   // Assume w points to an array of MAX_WORDLEN+1 elements
   
-  if (feof(in)) {
+  if (feof(in)) {//empty file
     return 0;
   }
 
   int pos = 0;
   char current_char = fgetc(in);
-  if (wc_isspace(current_char)) {
-    return 0;
+  while (wc_isspace(current_char)) {
+    current_char = fgetc(in);
   }
   // While current character in in is not a whitespace or EOF
   while (!wc_isspace(current_char) && !feof(in) && pos < MAX_WORDLEN) {
@@ -181,10 +181,11 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
   // Start at head, linear search through linkedlist until match is found
     // If match is found, set inserted to 0, return pointer to matching object
     struct WordEntry *cursor = head;
-    
-    while (cursor != NULL) {
-      if (wc_str_compare(cursor->word, s) == 0) {
+    // printf("%s %s %d\n", cursor->word, s, wc_str_compare(cursor->word, s));
+    while (cursor->next != NULL) {
+      if (wc_str_compare(cursor->next->word, s) == 0) {
         *inserted = 0;
+        cursor->next->count++;
         return cursor;
       } else {
         cursor = cursor->next;
@@ -192,15 +193,18 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
+    // printf("'%s'\n", s);
     // Make sure new_node->word doesn't have garbage in it
-    for (int i = 0; i < MAX_WORDLEN + 1; i++) {
-      new_node->word[i] = '\0';
-    }
-    
+    // for (int i = 0; i < MAX_WORDLEN + 1; i++) {
+    //   new_node->word[i] = '\0';
+    // }
+
     wc_str_copy(new_node->word, s); 
-    new_node->next = head;
+    // new_node->next = head;
+    cursor->next = new_node;
+    // printf("%s\n", cursor->next->word);
     *inserted = 1;
-    
+    cursor->next->count = 1;
     return new_node;
 }
 
@@ -220,9 +224,9 @@ struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned n
   // Find or insert the WordEntry object for the given string (s), returning a pointer to it.
   int inserted = 0;
   struct WordEntry *entry = wc_find_or_insert(buckets[index], s, &inserted);
-  if (inserted == 1) {
-    buckets[index] = entry;
-  }
+  // if (inserted == 1) {
+  //   buckets[index] = entry;
+  // }
   return entry;
 }
 

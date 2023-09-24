@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "wcfuncs.h"
 
 // Suggested number of buckets for the hash table
@@ -18,7 +19,7 @@ int main(int argc, char **argv) {
   // Initialize hash table
   struct WordEntry *hashtable[HASHTABLE_SIZE];
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
-    hashtable[i] = NULL;
+    hashtable[i] = malloc(sizeof(struct WordEntry));//sentinel node
   }
 
   // Open input file
@@ -50,17 +51,17 @@ int main(int argc, char **argv) {
     struct WordEntry *word = wc_dict_find_or_insert(hashtable, HASHTABLE_SIZE, curr_word);
 
     // increment the WordEntry's count
-    word->count++;
   }
 
   // Find best word, its count, and number of unique words by traversing entire hash table
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     struct WordEntry *cursor = hashtable[i];
-    while (cursor != NULL) {
+    while (cursor->next != NULL) {
       unique_words++;
-      if (cursor->count > best_word_count) {
-        best_word = cursor->word;
-        best_word_count = cursor->count;
+      // printf("%s %d\n", cursor->word, cursor->count);
+      if (cursor->next->count > best_word_count) {
+        best_word = cursor->next->word;
+        best_word_count = cursor->next->count;
       }
       cursor = cursor->next;
     }
