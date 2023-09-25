@@ -114,26 +114,33 @@ int wc_isalpha(unsigned char c) {
 int wc_readnext(FILE *in, unsigned char *w) {
 
   // Assume w points to an array of MAX_WORDLEN+1 elements
-  
-  if (feof(in)) {//empty file
+
+  if (in == NULL || w == NULL) {
     return 0;
   }
 
   int pos = 0;
-  char current_char = fgetc(in);
+  int current_char = fgetc(in);
+
   while (wc_isspace(current_char)) {
     current_char = fgetc(in);
   }
+
+  if (current_char == EOF) {
+    return 0;
+  }
+
   // While current character in in is not a whitespace or EOF
-  while (!wc_isspace(current_char) && !feof(in) && pos < MAX_WORDLEN) {
+  while (!wc_isspace(current_char) && current_char != EOF && pos < MAX_WORDLEN) {
     // Add current character to w
-    w[pos] = current_char;
+    w[pos] = (unsigned char) current_char;
     pos++;
     current_char = fgetc(in); // Get next character
   }
 
   // Add a null terminator when the loop ends
   w[pos] = '\0';
+  
   return 1;
 }
 
@@ -197,7 +204,7 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
       }
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
-    struct WordEntry *temp = head->next;//first word in LL
+    struct WordEntry *temp = head->next; //first word in LL
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
     new_node->next = temp;//make new node first in LL
     head->next = new_node;//make dummy node point to new node
