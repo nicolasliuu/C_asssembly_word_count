@@ -58,11 +58,26 @@ wc_hash:
 	.globl wc_str_compare
 wc_str_compare:
 	/* First store the pointers to lhs string and rhs string in two different registers, like r10 and r11 */
-	mov %rdi, %r10
-	mov %rsi, %r11
+	movb (%rdi), %r10b /**lhs*/
+	movb (%rsi), %r11b /* *rhs */
 
 	/* Enter loop */
+	.LstrCmpLoop:
+		cmpb %r10b, %r11b /* compare lhs and rhs character (loop condition)*/
+		jne .Lnotequal /* if no jump, enter loop body */
+		/*jl .Lless
+		jg .Lgreater*/
+		cmpb $0, %r10b /* at end of string? */
+		je .Lequal /* if at end of string, exit loop */
+		inc %rdi /* lhs++ */
+		inc %rsi /* rhs++ */
+		movb (%rdi), %r10b /* update r10 to be character pointed to by rdi*/
+		movb (%rsi), %r11b /* update r11 to be character pointed to by rsi */
+		jmp .LstrCmpLoop
 
+	.Ltrue:
+
+	.Lfalse:
 	/* Get the first character of the two strings */
 
 
@@ -76,16 +91,48 @@ wc_str_compare:
 
 	/* If one is shorter than the other but everything is equal, it is considered less */
 
-	.Lequal:
+	.Lequal: /*return 0*/
+		movl $0, %eax
+		ret
 
 	.Lless:
+		movl $-1, %eax
+		ret
 
-	.Lgreater:
 
+	.Lgreater: 
+		movl $1, %eax
+		ret
+
+	/* combine .Lless and .Lgreater by returning sub rhs, lhs */
+
+	.Lnotequal: /*return difference between lhs and rhs*/
+		/*subb %r11b, %r10b
+		movq %r11, %rax*/
+		cmpb $0, %r10b /* lhs shorter than rhs */
+		je .Lless
+		cmpb $0, %r11b /* rhs shorter than lhs */
+		je .Lgreater
+		cmpb %r10b, %r11b 
+		jl .Lless /* lhs less than rhs */
+		cmpb %r10b, %r11b
+		jg .Lgreater /* lhs greater than rhs */
+		ret 
 
 
 
 	ret
+
+	/*
+		while(*lhs == *rhs) {
+			if (*lhs == 0) {
+				return 0
+			}
+			*lhs++
+			*rhs++
+		}
+		return *lhs - *rhs
+	*/
 
 /*
  * Copy NUL-terminated source string to the destination buffer.
@@ -157,21 +204,22 @@ wc_isspace:
 	.globl wc_isalpha
 wc_isalpha:
 	/* First argument is stored in the lowest register of %rdi, load it into lowest regiter of %r10*/
-	mov %dil, %r10b 
+	movq %rdi, %r10
 
 	/* Check if the character is in the range of 'A' to 'Z' */
-	cmpb $65, %r10b
+	cmp $65, %r10
 	jl .Lnot_alpha
 	/* The character is greater than A and less than Z, so it is alphabetic*/
-	cmpb $90, %r10b
+	cmp $90, %r10
 	jle .Lis_alpha
 
 	/* Check if the character is in the range of 'a' to 'z' */
-	cmpb $97, %r10b
+	cmp $97, %r10
 	jl .Lnot_alpha	
 	/* The character is greater than a and less than z, so it is alphabetic*/
-	cmpb $122, %r10b
+	cmp $122, %r10
 	jle .Lis_alpha
+	jge .Lnot_alpha /* character is not alpha if greater than ASCII 122 */
 
 	.Lis_alpha:
 		# Move 1 to the return register and return
