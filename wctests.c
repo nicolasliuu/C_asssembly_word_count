@@ -231,7 +231,7 @@ void test_find_or_insert(TestObjs *objs) {
 
 
   p = wc_find_or_insert(list, (const unsigned char *) "avis", &inserted);
-  printf("%d\n", inserted);
+  // printf("%d\n", inserted);
   ASSERT(0 == inserted);
   ASSERT(p != NULL);
   ASSERT(0 == strcmp("avis", (const char *) p->word));

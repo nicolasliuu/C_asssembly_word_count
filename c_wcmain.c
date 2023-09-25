@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdint.h>
+// #include <stdint.h>
 #include <stdlib.h>
 #include "wcfuncs.h"
 
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
   printf("Unique words read: %u\n", (unsigned int) unique_words);
   printf("Most frequent word: %s (%u)\n", (const char *) best_word, best_word_count);
 
-  // TODO: make sure file is closed (if one was opened)
+  // make sure file is closed
   fclose(fp);
   // TODO: make sure memory is freed
   for (int i = 0; i < HASHTABLE_SIZE; i++) {

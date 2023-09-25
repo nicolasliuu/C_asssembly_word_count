@@ -57,7 +57,34 @@ wc_hash:
  */
 	.globl wc_str_compare
 wc_str_compare:
-	/* TODO: implement */
+	/* First store the pointers to lhs string and rhs string in two different registers, like r10 and r11 */
+	mov %rdi, %r10
+	mov %rsi, %r11
+
+	/* Enter loop */
+
+	/* Get the first character of the two strings */
+
+
+	/* Compare the two characters */
+
+
+	/* If the two characters are equal, go to the next character */
+
+
+	/* If the two characters are not equal, return the difference */
+
+	/* If one is shorter than the other but everything is equal, it is considered less */
+
+	.Lequal:
+
+	.Lless:
+
+	.Lgreater:
+
+
+
+
 	ret
 
 /*
@@ -92,30 +119,30 @@ wc_isspace:
 	/* TODO: implement */
 	mov %dil, %al
 
-	cmpb $'\t', %al  /* \t */
+	cmpb $9, %al  /* \t */
 	je .Lisspace
 
-	cmpb $'\n', %al /* \n */
+	cmpb $10, %al /* \n */
 	je .Lisspace
 
-	cmpb $'\v', %al /* \v */
+	cmpb $11, %al /* \v */
 	je .Lisspace
 
-	cmpb $'\f', %al /* \f */
+	cmpb $12, %al /* \f */
 	je .Lisspace
 
-	cmpb $'\r', %al /* \r */
+	cmpb $13, %al /* \r */
 	je .Lisspace
 
-	cmpb $' ', %al /* space */
+	cmpb $32, %al /* space */
 	je .Lisspace
 
 	.Lnotspace:
-		mov $0, %eax/*return 0 if not space*/
+		movq $0, %rax/*return 0 if not space*/
 		ret
 
 	.Lisspace:
-		mov $1, %eax/*return 1 if space*/
+		movq $1, %rax/*return 1 if space*/
 		ret
 
 	ret
@@ -129,33 +156,32 @@ wc_isspace:
  */
 	.globl wc_isalpha
 wc_isalpha:
-	/* First argument is stored in the lowest register of %rdi, load it into lowest regiter of %rax*/
-	mov %dil, %al 
+	/* First argument is stored in the lowest register of %rdi, load it into lowest regiter of %r10*/
+	mov %dil, %r10b 
 
 	/* Check if the character is in the range of 'A' to 'Z' */
-	cmpb $'A', %al
-	jl .not_alpha
+	cmpb $65, %r10b
+	jl .Lnot_alpha
 	/* The character is greater than A and less than Z, so it is alphabetic*/
-	cmpb $'Z', %al
-	jle .is_alpha
+	cmpb $90, %r10b
+	jle .Lis_alpha
 
 	/* Check if the character is in the range of 'a' to 'z' */
-	cmpb $'a', %al
-	jl .not_alpha	
+	cmpb $97, %r10b
+	jl .Lnot_alpha	
 	/* The character is greater than a and less than z, so it is alphabetic*/
-	cmpb $'z', %al
-	jle .is_alpha
+	cmpb $122, %r10b
+	jle .Lis_alpha
 
-.is_alpha:
-	# Move 1 to the return register and return
-	movl $1, %eax
-	ret
+	.Lis_alpha:
+		# Move 1 to the return register and return
+		movq $1, %rax
+		ret
 
-.not_alpha:
-
-	# Move 0 to the return register and return
-	movl $0, %eax
-	ret
+	.Lnot_alpha:
+		# Move 0 to the return register and return
+		movq $0, %rax
+		ret
 
 /*
  * Read the next word from given input stream, storing

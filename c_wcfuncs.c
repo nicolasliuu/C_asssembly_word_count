@@ -141,6 +141,11 @@ int wc_readnext(FILE *in, unsigned char *w) {
   // Add a null terminator when the loop ends
   w[pos] = '\0';
 
+  // Return 0 if pos is 0 (no word was read)
+  if (pos == 0) {
+    return 0;
+  }
+
   return 1;
 }
 
@@ -214,6 +219,9 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
     // struct WordEntry *temp = head->next; //first word in LL // THIS DONT DO ANYTHING?
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
+      for (int i = 0; i < MAX_WORDLEN + 1; i++) {
+        new_node->word[i] = '\0';
+      }
     // new_node->next = temp;//make new node first in LLfa
     new_node->next = head;
     head = new_node; //make dummy node point to new node
