@@ -101,7 +101,32 @@ wc_isspace:
  */
 	.globl wc_isalpha
 wc_isalpha:
-	/* TODO: implement */
+	/* First argument is stored in the lowest register of %rdi, load it into lowest regiter of %rax*/
+	mov %dil, %al 
+
+	/* Check if the character is in the range of 'A' to 'Z' */
+	cmpb $'A', %al
+	jl .not_alpha
+	/* The character is greater than A and less than Z, so it is alphabetic*/
+	cmpb $'Z', %al
+	jle .is_alpha
+
+	/* Check if the character is in the range of 'a' to 'z' */
+	cmpb $'a', %al
+	jl .not_alpha	
+	/* The character is greater than a and less than z, so it is alphabetic*/
+	cmpb $'z', %al
+	jle .is_alpha
+
+.is_alpha:
+	# Move 1 to the return register and return
+	movl $1, %eax
+	ret
+
+.not_alpha:
+
+	# Move 0 to the return register and return
+	movl $0, %eax
 	ret
 
 /*
