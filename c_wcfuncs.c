@@ -189,25 +189,34 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     // If match is found, set inserted to 0, return pointer to matching object
     if (head == NULL) {
       head = malloc(sizeof(struct WordEntry));
+      // No garbage in head->word
+      for (int i = 0; i < MAX_WORDLEN + 1; i++) {
+        head->word[i] = '\0';
+      }
+
+      wc_str_copy(head->word, s);
+      head->count = 0;
+      head->next = NULL;
+      *inserted = 1;
+      return head;
     }
     struct WordEntry *cursor = head;
     // printf("%s %s %d\n", cursor->word, s, wc_str_compare(cursor->word, s));
     //find the word
-    while (cursor->next != NULL) {
-      if (wc_str_compare(cursor->next->word, s) == 0) {
+    while (cursor != NULL) {
+      if (wc_str_compare(cursor->word, s) == 0) {
         *inserted = 0;
-        cursor->next->count++;
-        // printf("%s %u\n",cursor->next->word, cursor->next->count);
-        return cursor->next;
+        return cursor;
       } else {
         cursor = cursor->next;
       }
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
-    struct WordEntry *temp = head->next; //first word in LL
+    // struct WordEntry *temp = head->next; //first word in LL // THIS DONT DO ANYTHING?
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
-    new_node->next = temp;//make new node first in LLfa
-    head->next = new_node;//make dummy node point to new node
+    // new_node->next = temp;//make new node first in LLfa
+    new_node->next = head;
+    head = new_node; //make dummy node point to new node
     //temp = head.next
     //head.next = new node
     //new node.next = temp
@@ -244,9 +253,9 @@ struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned n
   // Find or insert the WordEntry object for the given string (s), returning a pointer to it.
   int inserted = 0;
   struct WordEntry *entry = wc_find_or_insert(buckets[index], s, &inserted);
-  // if (inserted == 1) {
-  //   buckets[index] = entry;
-  // }
+  if (inserted == 1) {
+    buckets[index] = entry;
+  }
   return entry;
 }
 

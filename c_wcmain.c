@@ -19,8 +19,9 @@ int main(int argc, char **argv) {
   // Initialize hash table
   struct WordEntry *hashtable[HASHTABLE_SIZE];
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
-    hashtable[i] = malloc(sizeof(struct WordEntry));//sentinel node
-    hashtable[i]->next = NULL;
+    // hashtable[i] = malloc(sizeof(struct WordEntry));//sentinel node
+    // hashtable[i]->next = NULL;
+    hashtable[i] = NULL;
   }
 
   // Open input file
@@ -52,17 +53,18 @@ int main(int argc, char **argv) {
     struct WordEntry *word = wc_dict_find_or_insert(hashtable, HASHTABLE_SIZE, curr_word);
 
     // increment the WordEntry's count
+    word->count++;
   }
 
   // Find best word, its count, and number of unique words by traversing entire hash table
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     struct WordEntry *cursor = hashtable[i];
-    while (cursor->next != NULL) {
+    while (cursor != NULL) {
       unique_words++;
       // printf("%s %d\n", cursor->word, cursor->count);
-      if (cursor->next->count > best_word_count) {
-        best_word = cursor->next->word;
-        best_word_count = cursor->next->count;
+      if (cursor->count > best_word_count) {
+        best_word = cursor->word;
+        best_word_count = cursor->count;
       }
       cursor = cursor->next;
     }
@@ -70,7 +72,7 @@ int main(int argc, char **argv) {
 
   printf("Total words read: %u\n", (unsigned int) total_words);
   printf("Unique words read: %u\n", (unsigned int) unique_words);
-  printf("Most frequent word: %s (%u)\n", (const char *) best_word, best_word_count + 1);
+  printf("Most frequent word: %s (%u)\n", (const char *) best_word, best_word_count);
 
   // TODO: make sure file is closed (if one was opened)
   fclose(fp);
