@@ -203,6 +203,8 @@ void test_trim_non_alpha(TestObjs *objs) {
 }
 
 void test_find_or_insert(TestObjs *objs) {
+  // printf("\n\n%s\n\n", "test");
+
   (void) objs;
 
   struct WordEntry *list = NULL;
@@ -229,6 +231,7 @@ void test_find_or_insert(TestObjs *objs) {
 
 
   p = wc_find_or_insert(list, (const unsigned char *) "avis", &inserted);
+  printf("%d\n", inserted);
   ASSERT(0 == inserted);
   ASSERT(p != NULL);
   ASSERT(0 == strcmp("avis", (const char *) p->word));
@@ -242,6 +245,7 @@ void test_find_or_insert(TestObjs *objs) {
   ASSERT(0 == strcmp("ax's", (const char *) p->word));
   ASSERT(1 == p->count);
   ++p->count;
+
 
   free(p);
 }

@@ -180,12 +180,16 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
   // TODO: implement
   // Start at head, linear search through linkedlist until match is found
     // If match is found, set inserted to 0, return pointer to matching object
+    if (head == NULL) {
+      head = malloc(sizeof(struct WordEntry));
+    }
     struct WordEntry *cursor = head;
     // printf("%s %s %d\n", cursor->word, s, wc_str_compare(cursor->word, s));
     while (cursor->next != NULL) {
       if (wc_str_compare(cursor->next->word, s) == 0) {
         *inserted = 0;
         cursor->next->count++;
+        // printf("%s %u\n",cursor->next->word, cursor->next->count);
         return cursor;
       } else {
         cursor = cursor->next;
@@ -193,6 +197,7 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
+    new_node->next = NULL;
     // printf("'%s'\n", s);
     // Make sure new_node->word doesn't have garbage in it
     // for (int i = 0; i < MAX_WORDLEN + 1; i++) {
@@ -202,9 +207,10 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
     wc_str_copy(new_node->word, s); 
     // new_node->next = head;
     cursor->next = new_node;
-    // printf("%s\n", cursor->next->word);
+    // printf("%s %d\n",cursor->next->word, *inserted);
     *inserted = 1;
-    cursor->next->count = 1;
+    // printf("%d\n", *inserted);
+    cursor->next->count = 0;
     return new_node;
 }
 

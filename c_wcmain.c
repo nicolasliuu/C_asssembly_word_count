@@ -20,6 +20,7 @@ int main(int argc, char **argv) {
   struct WordEntry *hashtable[HASHTABLE_SIZE];
   for (int i = 0; i < HASHTABLE_SIZE; i++) {
     hashtable[i] = malloc(sizeof(struct WordEntry));//sentinel node
+    hashtable[i]->next = NULL;
   }
 
   // Open input file
@@ -69,7 +70,7 @@ int main(int argc, char **argv) {
 
   printf("Total words read: %u\n", (unsigned int) total_words);
   printf("Unique words read: %u\n", (unsigned int) unique_words);
-  printf("Most frequent word: %s (%u)\n", (const char *) best_word, best_word_count);
+  printf("Most frequent word: %s (%u)\n", (const char *) best_word, best_word_count + 1);
 
   // TODO: make sure file is closed (if one was opened)
   fclose(fp);
