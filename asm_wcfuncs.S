@@ -77,12 +77,12 @@ wc_str_copy:
  *
  * For the purposes of this function, a whitespace character is one of
  *
- *   ' '
- *   '\t'
- *   '\r'
- *   '\n'
- *   '\f'
- *   '\v'
+ *   ' ' 32
+ *   '\t' 9
+ *   '\r' 13
+ *   '\n' 10
+ *   '\f' 12
+ *   '\v' 11
  *
  * C function prototype:
  *    int wc_isspace(unsigned char c);
@@ -90,6 +90,34 @@ wc_str_copy:
 	.globl wc_isspace
 wc_isspace:
 	/* TODO: implement */
+	mov %dil, %al
+
+	cmpb $'\t', %al  /* \t */
+	je .Lisspace
+
+	cmpb $'\n', %al /* \n */
+	je .Lisspace
+
+	cmpb $'\v', %al /* \v */
+	je .Lisspace
+
+	cmpb $'\f', %al /* \f */
+	je .Lisspace
+
+	cmpb $'\r', %al /* \r */
+	je .Lisspace
+
+	cmpb $' ', %al /* space */
+	je .Lisspace
+
+	.Lnotspace:
+		mov $0, %eax/*return 0 if not space*/
+		ret
+
+	.Lisspace:
+		mov $1, %eax/*return 1 if space*/
+		ret
+
 	ret
 
 /*
