@@ -79,16 +79,15 @@ wc_str_compare:
 		movl $0, %eax
 		ret
 
-	.Lless:
+	.Lless: /* return -1 */
 		movl $-1, %eax
 		ret
 
 
-	.Lgreater: 
+	.Lgreater: /* return 1 */
 		movl $1, %eax
 		ret
 
-	/* combine .Lless and .Lgreater by returning sub rhs, lhs */
 
 	.Lnotequal: /*return difference between lhs and rhs*/
 		/*subb %r11b, %r10b
@@ -104,16 +103,6 @@ wc_str_compare:
 
 		ret
 
-	/*
-		while(*lhs == *rhs) {
-			if (*lhs == 0) {
-				return 0
-			}
-			*lhs++
-			*rhs++
-		}
-		return *lhs - *rhs
-	*/
 
 /*
  * Copy NUL-terminated source string to the destination buffer.
@@ -144,7 +133,6 @@ wc_str_copy:
  */
 	.globl wc_isspace
 wc_isspace:
-	/* TODO: implement */
 	mov %dil, %al
 
 	cmpb $9, %al  /* \t */
