@@ -58,7 +58,7 @@ wc_hash:
 	.globl wc_str_compare
 wc_str_compare:
 	/* First store the pointers to lhs string and rhs string in two different registers, like r10 and r11 */
-	movb (%rdi), %r10b /**lhs*/
+	movb (%rdi), %r10b /* *lhs */
 	movb (%rsi), %r11b /* *rhs */
 
 	/* Enter loop */
@@ -74,22 +74,6 @@ wc_str_compare:
 		movb (%rdi), %r10b /* update r10 to be character pointed to by rdi*/
 		movb (%rsi), %r11b /* update r11 to be character pointed to by rsi */
 		jmp .LstrCmpLoop
-
-	.Ltrue:
-
-	.Lfalse:
-	/* Get the first character of the two strings */
-
-
-	/* Compare the two characters */
-
-
-	/* If the two characters are equal, go to the next character */
-
-
-	/* If the two characters are not equal, return the difference */
-
-	/* If one is shorter than the other but everything is equal, it is considered less */
 
 	.Lequal: /*return 0*/
 		movl $0, %eax
@@ -113,15 +97,12 @@ wc_str_compare:
 		je .Lless
 		cmpb $0, %r11b /* rhs shorter than lhs */
 		je .Lgreater
-		cmpb %r10b, %r11b 
+		cmpb %r11b, %r10b
 		jl .Lless /* lhs less than rhs */
-		cmpb %r10b, %r11b
+		cmpb %r11b, %r10b
 		jg .Lgreater /* lhs greater than rhs */
-		ret 
 
-
-
-	ret
+		ret
 
 	/*
 		while(*lhs == *rhs) {

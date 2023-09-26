@@ -121,6 +121,8 @@ void test_str_compare(TestObjs *objs) {
   ASSERT(wc_str_compare(objs->test_str_1, objs->test_str_1) == 0);
   ASSERT(wc_str_compare(objs->test_str_1, objs->test_str_4) < 0);
   ASSERT(wc_str_compare(objs->test_str_4, objs->test_str_1) > 0);
+  ASSERT(wc_str_compare("joe", "joemomma") < 0);
+  ASSERT(wc_str_compare("JOE", "joe") < 0);
 }
 
 void test_str_copy(TestObjs *objs) {
