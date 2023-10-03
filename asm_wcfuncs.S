@@ -12,6 +12,7 @@
 #define WORDENTRY_WORD_OFFSET   (0)
 #define WORDENTRY_COUNT_OFFSET  (MAX_WORDLEN+1)
 #define WORDENTRY_NEXT_OFFSET   (MAX_WORDLEN+1+4+4)
+#define WORDENTRY_SIZE (WORDENTRY_NEXT_OFFSET+8)
 
 	.section .rodata
 /* Define any string constants or read-only data here */
@@ -231,6 +232,33 @@ wc_readnext:
 	.globl wc_tolower
 wc_tolower:
 	/* TODO: implement */
+	subq $8, %rsp      /* adjust stack pointer */
+	movq %rdi, %r10    /* save pointer to character string w */
+	
+.LtoLowerLoop:
+	cmpb $0, (%r10)    /* check if at end of string */
+	je .LtoLowerDone	/* if at end of string, exit loop */
+
+.LisUpper: 	
+	/* Call wc_isalpha to check if currrent character is alphabetic */
+	/*  call wc_isalpha */
+
+	cmpb $65, (%r10) /* check if character is upper case */
+	jl .LtoLowerInc /* if character is lower case, increment pointer */
+	cmpb $90, (%r10)
+	jg .LtoLowerInc /* if character is lower case, increment pointer */
+
+	/* character is upper case, convert to lower case */
+	addb $32, (%r10) /* add 32 to convert to lower case */
+	jmp .LtoLowerInc
+
+.LtoLowerInc:
+	inc %r10 /* increment pointer */
+	jmp .LtoLowerLoop
+
+.LtoLowerDone:
+	/* just return */
+	addq $8, %rsp      /* restore stack pointer */
 	ret
 
 /*
