@@ -270,7 +270,34 @@ wc_tolower:
  */
 	.globl wc_trim_non_alpha
 wc_trim_non_alpha:
-	/* TODO: implement */
+	subq $8, %rsp 	/* adjust stack pointer */
+	movq %rdi, %r10 /* copy pointer to character string w into %r10 */
+	
+
+
+.LfindEnd: 
+	# Loop to reach the end of the NUL-terminated character string pointed-to by w
+	cmpq $0, (%r10) /* check if at end of string */
+	je .LtrimLoop	/* if at end of string, exit loop */
+	inc %r10 /* increment pointer */
+	jmp .LfindEnd
+
+.LtrimLoop:
+	# We reached the end of the string, now we need to trim the non-alpha characters
+	dec %r10 /* decrement pointer */
+	# Make a call to wc_isalpha to check if the current character is alphabetic
+	pushq %r10 /* Save $r10 before calling wc_isalpha */
+	movq (%r10), %rdi /* move pointer to character string w into %rdi */
+	call wc_isalpha
+	popq %r10 /* pop pointer to character string w off of stack */
+	cmpq $1, %rax /* check if character is alphabetic */
+	je .LtrimDone /* if character is alphabetic, exit loop */
+	# Trim this character
+	movb $0, (%r10) /* set character to NUL */
+	jmp .LtrimLoop
+
+.LtrimDone: 
+	addq $8, %rsp      /* restore stack pointer */
 	ret
 
 /*
