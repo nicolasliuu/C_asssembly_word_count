@@ -38,7 +38,20 @@
  */
 	.globl wc_hash
 wc_hash:
-	/* TODO: implement */
+	subq $8, %rsp      /* adjust stack pointer */
+	movl $5381, %r11d /* initialize hash_code to 5381 */
+
+.LhashLoop: 
+	cmpb $0, (%rdi) /* check if at end of string */
+	je .LhashDone
+	imull $33, %r11d /* hash_code = hash_code * 33 */
+	addb (%rdi), %r11b /* hash_code = hash_code + c */
+	incq %rdi /* increment pointer */
+	jmp .LhashLoop
+
+.LhashDone:
+	movl %r11d, %eax /* return hash_code */
+	addq $8, %rsp      /* restore stack pointer */
 	ret
 
 /*
@@ -219,7 +232,8 @@ wc_isalpha:
  */
 	.globl wc_readnext
 wc_readnext:
-	/* TODO: implement */
+	# File pointer in %rdi and pointer to character string w in %rsi
+
 	ret
 
 /*
