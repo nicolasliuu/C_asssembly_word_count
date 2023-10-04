@@ -128,7 +128,23 @@ wc_str_compare:
 	.globl wc_str_copy
 wc_str_copy:
 	/* TODO: implement */
-	ret
+	/*
+	check \0 in source
+	je .Lend
+	get character of source (rsi)
+	move character into dest (rdi)
+	*/
+	.LcopyLoop:
+		movb (%rsi), %r11b /* source */
+		cmp $0, %r11b
+		je .Lend
+		movb %r11b, (%rdi)
+		inc %rdi
+		inc %rsi
+		jmp .LcopyLoop
+
+	.Lend:
+		ret
 
 /*
  * Return 1 if the character code in c is a whitespace character,
