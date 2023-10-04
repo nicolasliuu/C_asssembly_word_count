@@ -127,20 +127,13 @@ wc_str_compare:
  */
 	.globl wc_str_copy
 wc_str_copy:
-	/* TODO: implement */
-	/*
-	check \0 in source
-	je .Lend
-	get character of source (rsi)
-	move character into dest (rdi)
-	*/
 	.LcopyLoop:
 		movb (%rsi), %r11b /* source */
-		cmp $0, %r11b
-		je .Lend
-		movb %r11b, (%rdi)
-		inc %rdi
-		inc %rsi
+		cmp $0, %r11b /*check if at end of source*/
+		je .Lend /* end loop if at end of source */
+		movb %r11b, (%rdi) /* put current character of source into destination */
+		inc %rdi /* dest++ */
+		inc %rsi /* source++ */
 		jmp .LcopyLoop
 
 	.Lend:
@@ -396,8 +389,35 @@ wc_trim_non_alpha:
  */
 	.globl wc_find_or_insert
 wc_find_or_insert:
-	/* TODO: implement */
-	ret
+	/*
+	rdi = head
+	rsi = s
+	rdx = inserted
+	*/
+	movq %rdi, %r10 # cursor = head
+	.LfindWordLoop:
+		cmp $0, %r10 # while cursor != null
+		jz .LnotFound
+		# pushq %r10
+		movq %r10, %rdi
+		call wc_str_compare # compare cursor's word (rdi) with s (rsi)
+		# popq %r10
+		cmp $0, %rax # if str compare == 0
+		je .LfoundWord
+		inc %r10 # cursor = cursor->next
+		jmp .LfindWordLoop
+
+	# .LnotFound:
+		movq WORDENTRY_SIZE, %rdi
+		call malloc # malloc new node
+
+
+	.LfoundWord:
+		movq $0, %rdx
+		movq %r10, %rax
+		ret
+
+
 
 /*
  * Find or insert the WordEntry object for the given string (s), returning
