@@ -45,7 +45,8 @@ wc_hash:
 	cmpb $0, (%rdi) /* check if at end of string */
 	je .LhashDone
 	imull $33, %r11d /* hash_code = hash_code * 33 */
-	addb (%rdi), %r11b /* hash_code = hash_code + c */
+	movzbl (%rdi), %eax /* move character into %eax */
+	addl %eax, %r11d /* hash_code = hash_code + c */
 	incq %rdi /* increment pointer */
 	jmp .LhashLoop
 
@@ -233,6 +234,23 @@ wc_isalpha:
 	.globl wc_readnext
 wc_readnext:
 	# File pointer in %rdi and pointer to character string w in %rsi
+	subq $8, %rsp      /* adjust stack pointer */
+	movq %rdi, %r10    /* save file pointer in %r10 */
+	movq %rsi, %r11    /* save pointer to character string w in %r11 */
+
+.Lread_clearwhite:
+	# Clear whitespace characters
+
+	
+	# Call fgetc to get the next character and call wc_isspace to check if it is whitespace
+	
+	call wc_isspace
+	cmpq $1, %rax
+	je .Lread_clearwhite
+	# We have a non-whitespace character, so we can continue
+
+.LreadLoop: 
+	
 
 	ret
 
@@ -287,8 +305,6 @@ wc_trim_non_alpha:
 	subq $8, %rsp 	/* adjust stack pointer */
 	movq %rdi, %r10 /* copy pointer to character string w into %r10 */
 	
-
-
 .LfindEnd: 
 	# Loop to reach the end of the NUL-terminated character string pointed-to by w
 	cmpq $0, (%r10) /* check if at end of string */
