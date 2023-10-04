@@ -237,21 +237,52 @@ wc_readnext:
 	subq $8, %rsp      /* adjust stack pointer */
 	movq %rdi, %r10    /* save file pointer in %r10 */
 	movq %rsi, %r11    /* save pointer to character string w in %r11 */
+	movq $0, %r12 		/* Counter */
 
 .Lread_clearwhite:
 	# Clear whitespace characters
-
+	movq %r10, %rdi
+	call fgetc 
+	cmpq $-1, %rax
+	je .LreadFail
 	
 	# Call fgetc to get the next character and call wc_isspace to check if it is whitespace
 	
+	movq %rax, %rdi
 	call wc_isspace
 	cmpq $1, %rax
 	je .Lread_clearwhite
-	# We have a non-whitespace character, so we can continue
+	# We have a non-whitespace character, so we can start reading the word
 
 .LreadLoop: 
-	
+	# Stop at the next whitespace character, EOF, or MAX_WORDLEN characters
+	cmpq $-1, %rdi
+	je .LreadDone
+	cmpq $MAX_WORDLEN, %r12
+	je .LreadDone
+	# Keep character in rax to call wc_isspace
+	call wc_isspace
+	cmpq $1, %rax
+	je .LreadDone
+	# We have a non-whitespace character, so we can start reading the word
+	movb %dil, (%r11)
+	inc %r12 # increment counter
+	inc %r11 # increment pointer w character string
+	movq %r10, %rdi
+	call fgetc
+	jmp .LreadLoop
 
+.LreadDone:
+	movb $0, (%r11) # set last character to NUL
+	cmpq $0, %r12
+	je .LreadFail
+	movq $1, %rax
+	addq $8, %rsp      /* restore stack pointer */
+	ret
+
+.LreadFail:
+	movq $0, %rax
+	addq $8, %rsp      /* restore stack pointer */
 	ret
 
 /*
