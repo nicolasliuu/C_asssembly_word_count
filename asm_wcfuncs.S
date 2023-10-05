@@ -394,29 +394,40 @@ wc_find_or_insert:
 	rsi = s
 	rdx = inserted
 	*/
-	movq %rdi, %r10 # cursor = head
+	subq $8, %rsp 
+	movq %rdi, %r13 # cursor = head
+	movq %rsi, %r12
 	.LfindWordLoop:
-		cmp $0, %r10 # while cursor != null
+		cmp $0, %r13 # while cursor != null
 		jz .LnotFound
-		# pushq %r10
-		movq %r10, %rdi
+		movq %r13, %rdi
 		call wc_str_compare # compare cursor's word (rdi) with s (rsi)
-		# popq %r10
 		cmp $0, %rax # if str compare == 0
 		je .LfoundWord
-		inc %r10 # cursor = cursor->next
+		inc %r13 # cursor = cursor->next
 		jmp .LfindWordLoop
 
 	.LnotFound:
-	/*movq WORDENTRY_SIZE, %rdi
-	call malloc # malloc new node*/
-	subq WORDENTRY_SIZE, %rsp
-
-	
+		mov $WORDENTRY_SIZE, %rdi # allocating size of word entry
+		call malloc # malloc new node
+		movq %r12, %rsi
+		movq %rax, %r11 # r11 contains new node
+		mov WORDENTRY_WORD_OFFSET(%r11), %rdi # getting the word at new node and putting it into rdi
+		# str copy segfaulting, problem with rdi??
+		call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
+		movq %rdi, WORDENTRY_WORD_OFFSET(%r11)
+		movq %rdi, WORDENTRY_NEXT_OFFSET(%r11) # next = head
+		movq %r11, %rdi # head = new_node
+		movl $1, (%rdx) # inserted = 1
+		movq $0, WORDENTRY_COUNT_OFFSET(%r11) # setting new_node->count to 0
+		movq %r11, %rax
+		addq $8, %rsp 
+		ret
 
 	.LfoundWord:
 		movq $0, %rdx
-		movq %r10, %rax
+		movq %r13, %rax
+		addq $8, %rsp 
 		ret
 
 
@@ -436,6 +447,10 @@ wc_find_or_insert:
 	.globl wc_dict_find_or_insert
 wc_dict_find_or_insert:
 	/* TODO: implement */
+	movq %r10, %rdi
+	call wc_hash
+	movq %rax, %r10 # put hash value in r10
+
 	ret
 
 /*
