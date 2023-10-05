@@ -34,7 +34,7 @@
  * being unsigned (in the range 0..255)
  *
  * C function prototype:
- *    uint32_t wc_hash(const unsigned char *w);
+ *    uint32_t wc_hash(const unsigned char *w)#
  */
 	.globl wc_hash
 wc_hash:
@@ -68,7 +68,7 @@ wc_hash:
  * "hi" would compare as less than "high".
  *
  * C function prototype:
- *    int wc_str_compare(const unsigned char *lhs, const unsigned char *rhs);
+ *    int wc_str_compare(const unsigned char *lhs, const unsigned char *rhs)#
  */
 	.globl wc_str_compare
 wc_str_compare:
@@ -123,7 +123,7 @@ wc_str_compare:
  * Copy NUL-terminated source string to the destination buffer.
  *
  * C function prototype:
- *    void wc_str_copy(unsigned char *dest, const unsigned char *source);
+ *    void wc_str_copy(unsigned char *dest, const unsigned char *source)#
  */
 	.globl wc_str_copy
 wc_str_copy:
@@ -144,7 +144,7 @@ wc_str_copy:
  *   '\v' 11
  *
  * C function prototype:
- *    int wc_isspace(unsigned char c);
+ *    int wc_isspace(unsigned char c)#
  */
 	.globl wc_isspace
 wc_isspace:
@@ -183,7 +183,7 @@ wc_isspace:
  * ('A' through 'Z' or 'a' through 'z'), 0 otherwise.
  *
  * C function prototype:
- *    int wc_isalpha(unsigned char c);
+ *    int wc_isalpha(unsigned char c)#
  */
 	.globl wc_isalpha
 wc_isalpha:
@@ -229,68 +229,72 @@ wc_isalpha:
  * characters in the sequence should be stored in the array.
  *
  * C function prototype:
- *    int wc_readnext(FILE *in, unsigned char *w);
+ *    int wc_readnext(FILE *in, unsigned char *w)#
  */
 	.globl wc_readnext
 wc_readnext:
-	# File pointer in %rdi and pointer to character string w in %rsi
-	subq $8, %rsp      /* adjust stack pointer */
-	movq %rdi, %r10    /* save file pointer in %r10 */
-	movq %rsi, %r11    /* save pointer to character string w in %r11 */
-	movq $0, %r12 		/* Counter */
 
-.Lread_clearwhite:
-	# Clear whitespace characters
-	movq %r10, %rdi
-	call fgetc 
-	cmpq $-1, %rax
+	subq $8, %rsp 	# Stack pointer
+	cmpq $0, %rdi   # Check if in is NULL
 	je .LreadFail
-	
-	# Call fgetc to get the next character and call wc_isspace to check if it is whitespace
-	
-	movq %rax, %rdi
-	call wc_isspace
-	cmpq $1, %rax
-	je .Lread_clearwhite
-	# We have a non-whitespace character, so we can start reading the word
-
-.LreadLoop: 
-	# Stop at the next whitespace character, EOF, or MAX_WORDLEN characters
-	cmpq $-1, %rdi
-	je .LreadDone
-	cmpq $MAX_WORDLEN, %r12
-	je .LreadDone
-	# Keep character in rax to call wc_isspace
-	call wc_isspace
-	cmpq $1, %rax
-	je .LreadDone
-	# We have a non-whitespace character, so we can start reading the word
-	movb %dil, (%r11)
-	inc %r12 # increment counter
-	inc %r11 # increment pointer w character string
-	movq %r10, %rdi
-	call fgetc
-	jmp .LreadLoop
-
-.LreadDone:
-	movb $0, (%r11) # set last character to NUL
-	cmpq $0, %r12
+	cmpq $0, %rsi 	# Check if w is NULL
 	je .LreadFail
+	movq %rdi, %r12 # Store *in in r12 register
+	movq %rsi, %r13 # Store *w in r13 register
+	movq $0, %r14   # Counter in rdx
+
+.Lclear_whitespace: 
+	call fgetc 		# Get the character from in
+	cmpb $-1, %al  # EOF 
+	je .LreadFail
+	movb %al, %dil  # Move the character we obtained from fgetc into dil so we can call is_space on it
+	call wc_isspace	 # Check if char is whitespace
+	cmpq $1, %rax    # If yes, run the loop again
+	je .Lclear_whitespace
+	# If not, we can store the character in w pointer.
+
+.LstoreLoop: 
+	movb %dil, (%r13) # Move character in lowest register of rdi where it's stored to array in %r13
+	inc %r14 # Increment the counter
+	inc %r13 # Increment our w pointer
+	cmpq $MAX_WORDLEN, %r14  # We reached max word length
+	je .Lterminate_string
+	movq %r12, %rdi # Prepare to read next character
+	call fgetc # Read the next character
+	cmpb $-1, %al # Check EOF
+	je .Lterminate_string
+	movb %al, %dil # Move our character obtained from fgetc to dil
+	call wc_isspace  # Check if next character is whitespace
+	cmpq $1, %rax # Is whitespace
+	je .Lterminate_string 
+	jmp  .LstoreLoop
+
+.Lterminate_string:
+	movb $0, (%r13) # Add a null terminator to w array
+	cmpq $0, %r14 # Check if pos is 0
+	je .Lreturnzero
 	movq $1, %rax
-	addq $8, %rsp      /* restore stack pointer */
+	addq $8, %rsp   # Align stack pointer
 	ret
+	
+
 
 .LreadFail:
-	movq $0, %rax
-	addq $8, %rsp      /* restore stack pointer */
+	movq $0, %rax   # Prepare to return 0
+	addq $8, %rsp   # Align stack pointer
 	ret
 
+.Lreturnzero: 
+	movq $0, %rax
+	addq $8, %rsp   # Align stack pointer
+	ret
+	
 /*
  * Convert the NUL-terminated character string in the array
  * pointed-to by w so that every letter is lower-case.
  *
  * C function prototype:
- *    void wc_tolower(unsigned char *w);
+ *    void wc_tolower(unsigned char *w)#
  */
 	.globl wc_tolower
 wc_tolower:
@@ -329,7 +333,7 @@ wc_tolower:
  * NUL-terminated character string pointed-to by w.
  *
  * C function prototype:
- *    void wc_trim_non_alpha(unsigned char *w);
+ *    void wc_trim_non_alpha(unsigned char *w)#
  */
 	.globl wc_trim_non_alpha
 wc_trim_non_alpha:
@@ -376,7 +380,7 @@ wc_trim_non_alpha:
  * job to update the count.)
  *
  * C function prototype:
- *    struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char *s, int *inserted);
+ *    struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char *s, int *inserted)#
  */
 	.globl wc_find_or_insert
 wc_find_or_insert:
@@ -393,7 +397,7 @@ wc_find_or_insert:
  * which represents s.
  *
  * C function prototype:
- *    struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned num_buckets, const unsigned char *s);
+ *    struct WordEntry *wc_dict_find_or_insert(struct WordEntry *buckets[], unsigned num_buckets, const unsigned char *s)#
  */
 	.globl wc_dict_find_or_insert
 wc_dict_find_or_insert:
@@ -404,7 +408,7 @@ wc_dict_find_or_insert:
  * Free all of the nodes in given linked list of WordEntry objects.
  *
  * C function prototype:
- *    void wc_free_chain(struct WordEntry *p);
+ *    void wc_free_chain(struct WordEntry *p)#
  */
 	.globl wc_free_chain
 wc_free_chain:
