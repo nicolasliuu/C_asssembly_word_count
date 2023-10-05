@@ -197,6 +197,7 @@ wc_isspace:
 	.globl wc_isalpha
 wc_isalpha:
 	/* First argument is stored in the lowest register of %rdi, load it into lowest regiter of %r10*/
+	pushq %r10
 	movq %rdi, %r10
 
 	/* Check if the character is in the range of 'A' to 'Z' */
@@ -217,11 +218,13 @@ wc_isalpha:
 	.Lis_alpha:
 		# Move 1 to the return register and return
 		movq $1, %rax
+		popq %r10
 		ret
 
 	.Lnot_alpha:
 		# Move 0 to the return register and return
 		movq $0, %rax
+		popq %r10
 		ret
 
 /*
@@ -244,6 +247,9 @@ wc_isalpha:
 wc_readnext:
 
 	subq $8, %rsp 	# Stack pointer
+	pushq %r12
+	pushq %r13
+	pushq %r14
 	cmpq $0, %rdi   # Check if in is NULL
 	je .LreadFail
 	cmpq $0, %rsi 	# Check if w is NULL
@@ -282,20 +288,27 @@ wc_readnext:
 	movb $0, (%r13) # Add a null terminator to w array
 	cmpq $0, %r14 # Check if pos is 0
 	je .Lreturnzero
+	popq %r12
+	popq %r13
+	popq %r14
 	movq $1, %rax
 	addq $8, %rsp   # Align stack pointer
 	ret
-	
-
 
 .LreadFail:
 	movq $0, %rax   # Prepare to return 0
 	addq $8, %rsp   # Align stack pointer
+	popq %r12
+	popq %r13
+	popq %r14
 	ret
 
 .Lreturnzero: 
 	movq $0, %rax
 	addq $8, %rsp   # Align stack pointer
+	popq %r12
+	popq %r13
+	popq %r14
 	ret
 	
 /*
@@ -348,22 +361,27 @@ wc_tolower:
 wc_trim_non_alpha:
 	subq $8, %rsp 	/* adjust stack pointer */
 	movq %rdi, %r10 /* copy pointer to character string w into %r10 */
+	pushq %r13
+	movq %rdi, %r13 /* store an instance of the pointer at the beginning of the character string */
 	
 .LfindEnd: 
 	# Loop to reach the end of the NUL-terminated character string pointed-to by w
-	cmpq $0, (%r10) /* check if at end of string */
+	cmpb $0, (%r10) /* check if at end of string */
 	je .LtrimLoop	/* if at end of string, exit loop */
 	inc %r10 /* increment pointer */
 	jmp .LfindEnd
 
 .LtrimLoop:
+	/* Check we are at the beginning */
+	# cmpq (%r10),(%r13) 
+	# je .LtrimDone
 	# We reached the end of the string, now we need to trim the non-alpha characters
 	dec %r10 /* decrement pointer */
 	# Make a call to wc_isalpha to check if the current character is alphabetic
-	pushq %r10 /* Save $r10 before calling wc_isalpha */
-	movq (%r10), %rdi /* move pointer to character string w into %rdi */
+	# pushq %r10 /* Save $r10 before calling wc_isalpha */
+	movb (%r10), %dil /* move pointer to character string w into %rdi */
 	call wc_isalpha
-	popq %r10 /* pop pointer to character string w off of stack */
+	# popq %r10 /* pop pointer to character string w off of stack */
 	cmpq $1, %rax /* check if character is alphabetic */
 	je .LtrimDone /* if character is alphabetic, exit loop */
 	# Trim this character
@@ -372,6 +390,7 @@ wc_trim_non_alpha:
 
 .LtrimDone: 
 	addq $8, %rsp      /* restore stack pointer */
+	popq %r13
 	ret
 
 /*
