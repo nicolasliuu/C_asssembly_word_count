@@ -407,10 +407,12 @@ wc_find_or_insert:
 		inc %r10 # cursor = cursor->next
 		jmp .LfindWordLoop
 
-	# .LnotFound:
-		movq WORDENTRY_SIZE, %rdi
-		call malloc # malloc new node
+	.LnotFound:
+	/*movq WORDENTRY_SIZE, %rdi
+	call malloc # malloc new node*/
+	subq WORDENTRY_SIZE, %rsp
 
+	
 
 	.LfoundWord:
 		movq $0, %rdx
