@@ -192,19 +192,19 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
   // TODO: implement
   // Start at head, linear search through linkedlist until match is found
     // If match is found, set inserted to 0, return pointer to matching object
-    if (head == NULL) {
-      head = malloc(sizeof(struct WordEntry));
-      // No garbage in head->word
-      for (int i = 0; i < MAX_WORDLEN + 1; i++) {
-        head->word[i] = '\0';
-      }
+    // if (head == NULL) {
+    //   head = malloc(sizeof(struct WordEntry));
+    //   // No garbage in head->word
+    //   for (int i = 0; i < MAX_WORDLEN + 1; i++) {
+    //     head->word[i] = '\0';
+    //   }
 
-      wc_str_copy(head->word, s);
-      head->count = 0;
-      head->next = NULL;
-      *inserted = 1;
-      return head;
-    }
+    //   wc_str_copy(head->word, s);
+    //   head->count = 0;
+    //   head->next = NULL;
+    //   *inserted = 1;
+    //   return head;
+    // }
     struct WordEntry *cursor = head;
     // printf("%s %s %d\n", cursor->word, s, wc_str_compare(cursor->word, s));
     //find the word
@@ -217,30 +217,14 @@ struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char 
       }
     }
     // If not found, create new WordEntry object, set next to head, set inserted to 1, return pointer to new node
-    // struct WordEntry *temp = head->next; //first word in LL // THIS DONT DO ANYTHING?
     struct WordEntry *new_node = malloc(sizeof(struct WordEntry));
       for (int i = 0; i < MAX_WORDLEN + 1; i++) {
         new_node->word[i] = '\0';
       }
-    // new_node->next = temp;//make new node first in LLfa
     new_node->next = head;
     head = new_node; //make dummy node point to new node
-    //temp = head.next
-    //head.next = new node
-    //new node.next = temp
-    // printf("'%s'\n", s);
-    // Make sure new_node->word doesn't have garbage in it
-    // for (int i = 0; i < MAX_WORDLEN + 1; i++) {
-    //   new_node->word[i] = '\0';
-    // }
-
     wc_str_copy(new_node->word, s); 
-    // new_node->next = head;
-    // cursor->next = new_node;
-    // printf("%s %d\n",cursor->next->word, *inserted);
     *inserted = 1;
-    // printf("%d\n", *inserted);
-    // cursor->next->count = 0;
     new_node->count = 0;
     return new_node;
 }
