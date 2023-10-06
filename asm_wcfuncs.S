@@ -129,6 +129,7 @@ wc_str_compare:
 wc_str_copy:
 	subq $8, %rsp
 	pushq %r12
+	pushq %rdi
 	.LcopyLoop:
 		movb (%rsi), %r12b /* source */
 		cmpb $0, %r12b /*check if at end of source*/
@@ -139,6 +140,7 @@ wc_str_copy:
 		jmp .LcopyLoop
 
 	.Lend:
+		popq %rdi
 		popq %r12
 		addq $8, %rsp
 		ret
@@ -431,45 +433,54 @@ wc_find_or_insert:
 	pushq %r13
 	pushq %r14
 	pushq %r15
+	pushq %rbx
 	movq %rdi, %r13 # cursor = head, this can move around
 	movq %rdi, %r15 # permanent reference to head
 	movq %rsi, %r12 # r12 holds string
-	.LfindWordLoop:
-		cmp $0, %r13 # while cursor != null
-		jz .LnotFound
-		movq %r13, %rdi
-		call wc_str_compare # compare cursor's word (rdi) with s (rsi)
-		cmp $0, %rax # if str compare == 0
-		je .LfoundWord
-		inc %r13 # cursor = cursor->next
-		jmp .LfindWordLoop
+	movq %rdx, %rbx # rbx holds the pointer *inserted
 
-	.LnotFound:
-		mov $WORDENTRY_SIZE, %rdi # allocating size of word entry		
-		call malloc # malloc new node
-		movq %r12, %rsi
-		movq %rax, %r11 # r11 contains new node
-		mov WORDENTRY_WORD_OFFSET(%r11), %rdi # getting the word at new node and putting it into rdi
-		# str copy segfaulting, problem with rdi??
-		call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
-		movq %rdi, WORDENTRY_WORD_OFFSET(%r14) # put the copied word into new_node->word
-		movq $1, (%rdx) # inserted = 1
-		movq $0, WORDENTRY_COUNT_OFFSET(%r14) # setting new_node->count to 0
-		movq %r15, WORDENTRY_NEXT_OFFSET(%r14) # next = head
-		movq %r14, %r15 # head = new_node
-		movq %r14, %rax # return new node
-		popq %r15
-		popq %r14
-		popq %r13
-		popq %r12
-		addq $8, %rsp 
-		ret
+.LfindWordLoop:
+	cmp $0, %r13 # while cursor != null
+	jz .LnotFound
+	movq %r13, %rdi
+	movq %r12, %rsi
+	call wc_str_compare # compare cursor's word (rdi) with s (rsi)
+	cmp $0, %rax # if str compare == 0
+	je .LfoundWord
+	movq WORDENTRY_NEXT_OFFSET(%r13), %r13 # cursor = cursor->next # SHOULD NOT BE JUST 1
+	jmp .LfindWordLoop
 
-	.LfoundWord:
-		movq $0, %rdx
-		movq %r13, %rax
-		addq $8, %rsp 
-		ret
+.LnotFound:
+	mov $WORDENTRY_SIZE, %rdi # allocating size of word entry		
+	call malloc # malloc new node
+	movq %r12, %rsi # Move string into rsi for str copy
+	movq %rax, %r14 # r14 contains new node
+	lea WORDENTRY_WORD_OFFSET(%r14), %rdi # getting the word at new node and putting it into rdi
+	call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
+	# mov %rdi, WORDENTRY_WORD_OFFSET(%r14) # put the copied word into new_node->word
+	movq $1, (%rbx) # inserted = 1
+	movq $0, WORDENTRY_COUNT_OFFSET(%r14) # setting new_node->count to 0
+	movq %r15, WORDENTRY_NEXT_OFFSET(%r14) # next = head
+	movq %r14, %r15 # head = new_node
+	movq %r14, %rax # return new node
+	popq %rbx	
+	popq %r15
+	popq %r14 	
+	popq %r13
+	popq %r12
+	addq $8, %rsp 
+	ret
+
+.LfoundWord:
+	movq $0, (%rbx)
+	movq %r13, %rax
+	popq %rbx
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	addq $8, %rsp 
+	ret
 
 
 

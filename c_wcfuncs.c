@@ -191,20 +191,7 @@ void wc_trim_non_alpha(unsigned char *w) {
 struct WordEntry *wc_find_or_insert(struct WordEntry *head, const unsigned char *s, int *inserted) {
   // TODO: implement
   // Start at head, linear search through linkedlist until match is found
-    // If match is found, set inserted to 0, return pointer to matching object
-    // if (head == NULL) {
-    //   head = malloc(sizeof(struct WordEntry));
-    //   // No garbage in head->word
-    //   for (int i = 0; i < MAX_WORDLEN + 1; i++) {
-    //     head->word[i] = '\0';
-    //   }
 
-    //   wc_str_copy(head->word, s);
-    //   head->count = 0;
-    //   head->next = NULL;
-    //   *inserted = 1;
-    //   return head;
-    // }
     struct WordEntry *cursor = head;
     // printf("%s %s %d\n", cursor->word, s, wc_str_compare(cursor->word, s));
     //find the word
