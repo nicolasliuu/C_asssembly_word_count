@@ -127,16 +127,20 @@ wc_str_compare:
  */
 	.globl wc_str_copy
 wc_str_copy:
+	subq $8, %rsp
+	pushq %r12
 	.LcopyLoop:
-		movb (%rsi), %r11b /* source */
-		cmp $0, %r11b /*check if at end of source*/
+		movb (%rsi), %r12b /* source */
+		cmpb $0, %r12b /*check if at end of source*/
 		je .Lend /* end loop if at end of source */
-		movb %r11b, (%rdi) /* put current character of source into destination */
+		movb %r12b, (%rdi) /* put current character of source into destination */
 		inc %rdi /* dest++ */
 		inc %rsi /* source++ */
 		jmp .LcopyLoop
 
 	.Lend:
+		popq %r12
+		addq $8, %rsp
 		ret
 
 /*
@@ -418,8 +422,13 @@ wc_find_or_insert:
 	rdx = inserted
 	*/
 	subq $8, %rsp 
-	movq %rdi, %r13 # cursor = head
-	movq %rsi, %r12
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	movq %rdi, %r13 # cursor = head, this can move around
+	movq %rdi, %r15 # permanent reference to head
+	movq %rsi, %r12 # r12 holds string
 	.LfindWordLoop:
 		cmp $0, %r13 # while cursor != null
 		jz .LnotFound
@@ -431,19 +440,27 @@ wc_find_or_insert:
 		jmp .LfindWordLoop
 
 	.LnotFound:
-		mov $WORDENTRY_SIZE, %rdi # allocating size of word entry
+		mov $WORDENTRY_SIZE, %rdi # allocating size of word entry		
 		call malloc # malloc new node
-		movq %r12, %rsi
-		movq %rax, %r11 # r11 contains new node
-		mov WORDENTRY_WORD_OFFSET(%r11), %rdi # getting the word at new node and putting it into rdi
+		movq %r12, %rsi # move string to rsi for str copy (second arg)
+		movq %rax, %r14 # r14 contains new node
+		# xor (%r14), (%r14) # null terminate wordentry_word
+		 movb $0, WORDENTRY_WORD_OFFSET(%r14) # null terminate wordentry_word
+
+		
+		mov %r14, %rdi # getting the word at new node and putting it into rdi
 		# str copy segfaulting, problem with rdi??
 		call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
-		movq %rdi, WORDENTRY_WORD_OFFSET(%r11)
-		movq %rdi, WORDENTRY_NEXT_OFFSET(%r11) # next = head
-		movq %r11, %rdi # head = new_node
-		movl $1, (%rdx) # inserted = 1
-		movq $0, WORDENTRY_COUNT_OFFSET(%r11) # setting new_node->count to 0
-		movq %r11, %rax
+		movq %rdi, WORDENTRY_WORD_OFFSET(%r14) # put the copied word into new_node->word
+		movq $1, (%rdx) # inserted = 1
+		movq $0, WORDENTRY_COUNT_OFFSET(%r14) # setting new_node->count to 0
+		movq %r15, WORDENTRY_NEXT_OFFSET(%r14) # next = head
+		movq %r14, %r15 # head = new_node
+		movq %r14, %rax # return new node
+		popq %r15
+		popq %r14
+		popq %r13
+		popq %r12
 		addq $8, %rsp 
 		ret
 
