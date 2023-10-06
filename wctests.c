@@ -13,6 +13,7 @@ typedef struct {
   const unsigned char *test_str_1_copy;
 
   const unsigned char *words_1;
+  const unsigned char *test;
 } TestObjs;
 
 // Functions to create and clean up the test fixture object
@@ -72,6 +73,7 @@ TestObjs *setup(void) {
   objs->test_str_1_copy = (const unsigned char *) "hello";
 
   objs->words_1 = (const unsigned char *) "A strong smell of petroleum prevails throughout.";
+  objs->test = (const unsigned char *) "\t\n\t\r hello hi \t\f\n\v";
 
   //printf("%u\n", wc_hash("Burris"));
   //printf("%u\n", wc_hash("Burt's"));
@@ -185,6 +187,15 @@ void test_readnext(TestObjs *objs) {
   ASSERT(0 == wc_readnext(in, buf));
 
   fclose(in);
+
+  in = create_input_file(objs->test);
+
+  ASSERT(1 == wc_readnext(in, buf));
+  ASSERT(0 == strcmp(("hello"), (const char *) buf));
+
+  ASSERT(1 == wc_readnext(in, buf));
+  ASSERT(0 == strcmp(("hi"), (const char *) buf));
+  
 }
 
 void test_tolower(TestObjs *objs) {

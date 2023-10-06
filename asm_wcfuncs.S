@@ -128,6 +128,9 @@ wc_str_compare:
 	.globl wc_str_copy
 wc_str_copy:
 	.LcopyLoop:
+		# Check source not null
+		cmpq $0, %rsi
+		je .Lend
 		movb (%rsi), %r11b /* source */
 		cmp $0, %r11b /*check if at end of source*/
 		je .Lend /* end loop if at end of source */
@@ -256,9 +259,10 @@ wc_readnext:
 	je .LreadFail
 	movq %rdi, %r12 # Store *in in r12 register
 	movq %rsi, %r13 # Store *w in r13 register
-	movq $0, %r14   # Counter in rdx
+	movq $0, %r14   # Counter in r14
 
 .Lclear_whitespace: 
+	movq %r12, %rdi
 	call fgetc 		# Get the character from in
 	cmpb $-1, %al  # EOF 
 	je .LreadFail
@@ -288,9 +292,9 @@ wc_readnext:
 	movb $0, (%r13) # Add a null terminator to w array
 	cmpq $0, %r14 # Check if pos is 0
 	je .Lreturnzero
-	popq %r12
-	popq %r13
 	popq %r14
+	popq %r13
+	popq %r12
 	movq $1, %rax
 	addq $8, %rsp   # Align stack pointer
 	ret
@@ -298,9 +302,9 @@ wc_readnext:
 .LreadFail:
 	movq $0, %rax   # Prepare to return 0
 	addq $8, %rsp   # Align stack pointer
-	popq %r12
-	popq %r13
 	popq %r14
+	popq %r13
+	popq %r12
 	ret
 
 .Lreturnzero: 
@@ -360,37 +364,37 @@ wc_tolower:
 	.globl wc_trim_non_alpha
 wc_trim_non_alpha:
 	subq $8, %rsp 	/* adjust stack pointer */
-	movq %rdi, %r10 /* copy pointer to character string w into %r10 */
 	pushq %r13
-	movq %rdi, %r13 /* store an instance of the pointer at the beginning of the character string */
+	pushq %r14
+	movq %rdi, %r13 /* copy pointer to character string w into %r10 */
+	movq $0, %r14 # Counter
 	
 .LfindEnd: 
 	# Loop to reach the end of the NUL-terminated character string pointed-to by w
-	cmpb $0, (%r10) /* check if at end of string */
+	cmpb $0, (%r13) /* check if at end of string */
 	je .LtrimLoop	/* if at end of string, exit loop */
-	inc %r10 /* increment pointer */
+	inc %r13 /* increment pointer */
+	inc %r14
 	jmp .LfindEnd
 
 .LtrimLoop:
-	/* Check we are at the beginning */
-	# cmpq (%r10),(%r13) 
-	# je .LtrimDone
+	cmpq $0, %r14 	/* We made it back to the beginning so stop */
+	je .LtrimDone
 	# We reached the end of the string, now we need to trim the non-alpha characters
-	dec %r10 /* decrement pointer */
+	dec %r13 /* decrement pointer */
+	dec %r14 /* decrement count */
 	# Make a call to wc_isalpha to check if the current character is alphabetic
-	# pushq %r10 /* Save $r10 before calling wc_isalpha */
-	movb (%r10), %dil /* move pointer to character string w into %rdi */
+	movb (%r13), %dil /* move current character in w into %rdi */
 	call wc_isalpha
-	# popq %r10 /* pop pointer to character string w off of stack */
 	cmpq $1, %rax /* check if character is alphabetic */
 	je .LtrimDone /* if character is alphabetic, exit loop */
 	# Trim this character
-	movb $0, (%r10) /* set character to NUL */
+	movb $0, (%r13) /* set character to NUL */
 	jmp .LtrimLoop
 
 .LtrimDone: 
 	addq $8, %rsp      /* restore stack pointer */
-	popq %r13
+
 	ret
 
 /*
@@ -435,7 +439,7 @@ wc_find_or_insert:
 		call malloc # malloc new node
 		movq %r12, %rsi
 		movq %rax, %r11 # r11 contains new node
-		mov WORDENTRY_WORD_OFFSET(%r11), %rdi # getting the word at new node and putting it into rdi
+		mov %r11, %rdi # getting the word at new node and putting it into rdi
 		# str copy segfaulting, problem with rdi??
 		call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
 		movq %rdi, WORDENTRY_WORD_OFFSET(%r11)
