@@ -459,6 +459,7 @@ wc_find_or_insert:
 	call wc_str_copy # wc_str_copy(new_node->word, s) copy s into new_node->word
 	# mov %rdi, WORDENTRY_WORD_OFFSET(%r14) # put the copied word into new_node->word
 	movq $1, (%rbx) # inserted = 1
+	movq %rbx, %rdx # movb $1, (%rdx) # inserted = 1
 	movq $0, WORDENTRY_COUNT_OFFSET(%r14) # setting new_node->count to 0
 	movq %r15, WORDENTRY_NEXT_OFFSET(%r14) # next = head
 	movq %r14, %r15 # head = new_node
@@ -473,6 +474,7 @@ wc_find_or_insert:
 
 .LfoundWord:
 	movq $0, (%rbx)
+	movq %rbx, %rdx
 	movq %r13, %rax
 	popq %rbx
 	popq %r15
@@ -498,12 +500,62 @@ wc_find_or_insert:
  */
 	.globl wc_dict_find_or_insert
 wc_dict_find_or_insert:
-	/* TODO: implement */
-	movq %r10, %rdi
+	subq $8, %rsp
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	pushq %rbx
+	movq %rdi, %r12  # Store pointer to our hash map, buckets
+	movq %rsi, %r13  # Store our number of buckets
+	movq %rdx, %r14  # Pointer to string s
+	movq %r14, %rdi
 	call wc_hash
-	movq %rax, %r10 # put hash value in r10
+	movl %eax, %r10d # put hash value in r10
+	xor %rdx, %rdx # Clear values in rdx for modulo
+	movl %r10d, %eax
+	divl %r13d # Divide %rdx:%rax by %r13 (num buckets), remainder (modulo result) will be in %rdx 
+	movl %edx, %r15d # %r15 now holds our 'index' element for our find or insert
+	# movq $0, (%rbx) # %rbx is our 'inserted' pointer for wc_find_or_insert
+	
+	# Prepare call to wc_find_or_insert
+	# buckets[index] = buckets pointer + (index * size of wordentry)
+	# leaq (%r12, %r15, WORDENTRY_SIZE), %r12 	#  Store buckets[index] at %r12, overwriting our num buckets which we don't need anymore
+	movq (%r12, %r15, 8), %rdi 	# Move buckets[index] to first argument, rdi
+	movq %r14, %rsi		# Move s to second argument, rsi
+	subq $16, %rsp             # allocate space for inserted
+ 	movq $0, (%rsp)           # initialize inserted to 0
+	leaq (%rsp), %rdx         # get address of inserted
+	movq $0, (%rdx)
+	call wc_find_or_insert
+	cmpq $1, (%rdx)         # check if inserted is 1
+	jne .Lnot_inserted 
+	addq $16, %rsp
+	# addq $8, %rsp
+	# leaq -4(%rsp), %rdx			# We need *inserted pointer for find or insert call
+	# call wc_find_or_insert		# The found or inserted wordentry will be in %rdi
+	# cmp $1, -4(%rsp)			# Check the value of *inserted, if it's 1, we need to set buckets[index] to this node
 
+	movq %rax, (%r12, %r15, 8)		# Update buckets[index] with the inserted pointer to wordentry
+	movl (%rsp), %ecx           
+	popq %rbx
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	addq $8, %rsp
 	ret
+
+.Lnot_inserted:
+	addq $16, %rsp
+	popq %rbx
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	addq $8, %rsp	
+	ret
+
 
 /*
  * Free all of the nodes in given linked list of WordEntry objects.
