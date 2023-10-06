@@ -365,37 +365,41 @@ wc_tolower:
 	.globl wc_trim_non_alpha
 wc_trim_non_alpha:
 	subq $8, %rsp 	/* adjust stack pointer */
-	pushq %r13
+	pushq %r13 
 	pushq %r14
+	pushq %r15 # Used to store character pointer
 	movq %rdi, %r13 /* copy pointer to character string w into %r10 */
+	movq %r13, %r15 # Have char pointer start at string w
 	movq $0, %r14 # Counter
 	
 .LfindEnd: 
 	# Loop to reach the end of the NUL-terminated character string pointed-to by w
-	cmpb $0, (%r13) /* check if at end of string */
+	cmpb $0, (%r15) /* check if at end of string */
 	je .LtrimLoop	/* if at end of string, exit loop */
-	inc %r13 /* increment pointer */
-	inc %r14
+	inc %r15 /* increment char pointer */
+	inc %r14 # Increment count
 	jmp .LfindEnd
 
 .LtrimLoop:
 	cmpq $0, %r14 	/* We made it back to the beginning so stop */
 	je .LtrimDone
 	# We reached the end of the string, now we need to trim the non-alpha characters
-	dec %r13 /* decrement pointer */
+	dec %r15 /* decrement char pointer */
 	dec %r14 /* decrement count */
 	# Make a call to wc_isalpha to check if the current character is alphabetic
-	movb (%r13), %dil /* move current character in w into %rdi */
+	movzx (%r15), %edi /* move current character in w into %rdi */
 	call wc_isalpha
 	cmpq $1, %rax /* check if character is alphabetic */
 	je .LtrimDone /* if character is alphabetic, exit loop */
 	# Trim this character
-	movb $0, (%r13) /* set character to NUL */
+	movb $0, (%r15) /* set character to NUL */
 	jmp .LtrimLoop
 
 .LtrimDone: 
 	addq $8, %rsp      /* restore stack pointer */
-
+	popq %r15
+	popq %r14
+	popq %r13
 	ret
 
 /*
