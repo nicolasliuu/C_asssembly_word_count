@@ -565,8 +565,38 @@ wc_dict_find_or_insert:
  */
 	.globl wc_free_chain
 wc_free_chain:
-	/* TODO: implement */
-	ret
+	/*
+	rdi = p
+	r12 = temp
+	mov rdi, r12
+
+	.LfreeLoop
+		cmp 0, rdi
+		jz .Lend
+		movq WORDENTRY_NEXT_OFFSET(%rdi), %r12
+		call free
+		mov r12, rdi
+		jmp .LfreeLoop
+
+	.Lend
+		ret
+	 */
+	subq $8, %rsp
+	pushq %r12
+	movq %rdi, %r12 # r12 is a temp variable that holds rdi(p)
+
+	.LfreeLoop:
+		cmpq $0, %rdi # check if p == null
+		jz .Lfreed # end of loop if p == null
+		movq WORDENTRY_NEXT_OFFSET(%rdi), %r12 # temp = p->next
+		call free # free the current node (rdi/p)
+		movq %r12, %rdi # p = temp
+		jmp .LfreeLoop
+
+	.Lfreed:
+		popq %r12
+		addq $8, %rsp
+		ret
 
 /*
 vim:ft=gas:
