@@ -129,21 +129,22 @@ wc_str_compare:
 wc_str_copy:
 	subq $8, %rsp
 	pushq %r12
-	pushq %rdi
-	.LcopyLoop:
-		movb (%rsi), %r12b /* source */
-		cmpb $0, %r12b /*check if at end of source*/
-		je .Lend /* end loop if at end of source */
-		movb %r12b, (%rdi) /* put current character of source into destination */
-		inc %rdi /* dest++ */
-		inc %rsi /* source++ */
-		jmp .LcopyLoop
+	# pushq %rdi
+.LcopyLoop:
+	movb (%rsi), %r12b /* source */
+	cmpb $0, %r12b /*check if at end of source*/
+	je .Lend /* end loop if at end of source */
+	movb %r12b, (%rdi) /* put current character of source into destination */
+	inc %rdi /* dest++ */
+	inc %rsi /* source++ */
+	jmp .LcopyLoop
 
-	.Lend:
-		popq %rdi
-		popq %r12
-		addq $8, %rsp
-		ret
+.Lend:
+	# popq %rdi
+	movb $0, (%rdi) # Null terminate the destination string
+	popq %r12
+	addq $8, %rsp
+	ret
 
 /*
  * Return 1 if the character code in c is a whitespace character,
@@ -484,8 +485,6 @@ wc_find_or_insert:
 	addq $8, %rsp 
 	ret
 
-
-
 /*
  * Find or insert the WordEntry object for the given string (s), returning
  * a pointer to it. The head of the linked list which contains (or should
@@ -520,7 +519,6 @@ wc_dict_find_or_insert:
 	
 	# Prepare call to wc_find_or_insert
 	# buckets[index] = buckets pointer + (index * size of wordentry)
-	# leaq (%r12, %r15, WORDENTRY_SIZE), %r12 	#  Store buckets[index] at %r12, overwriting our num buckets which we don't need anymore
 	movq (%r12, %r15, 8), %rdi 	# Move buckets[index] to first argument, rdi
 	movq %r14, %rsi		# Move s to second argument, rsi
 	subq $16, %rsp             # allocate space for inserted
@@ -530,14 +528,8 @@ wc_dict_find_or_insert:
 	call wc_find_or_insert
 	cmpq $1, (%rdx)         # check if inserted is 1
 	jne .Lnot_inserted 
-	addq $16, %rsp
-	# addq $8, %rsp
-	# leaq -4(%rsp), %rdx			# We need *inserted pointer for find or insert call
-	# call wc_find_or_insert		# The found or inserted wordentry will be in %rdi
-	# cmp $1, -4(%rsp)			# Check the value of *inserted, if it's 1, we need to set buckets[index] to this node
-
+	addq $16, %rsp 			# restore stack pointer
 	movq %rax, (%r12, %r15, 8)		# Update buckets[index] with the inserted pointer to wordentry
-	movl (%rsp), %ecx           
 	popq %rbx
 	popq %r15
 	popq %r14
