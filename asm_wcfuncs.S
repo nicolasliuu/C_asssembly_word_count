@@ -500,17 +500,6 @@ wc_find_or_insert:
 	addq $8, %rsp 
 	ret
 
-.LemptyOrNull:
-	movq $0, (%rbx)
-	movq %rbx, %rdx
-	popq %rbx	
-	popq %r15
-	popq %r14 	
-	popq %r13
-	popq %r12
-	addq $8, %rsp 
-	ret
-
 /*
  * Find or insert the WordEntry object for the given string (s), returning
  * a pointer to it. The head of the linked list which contains (or should
