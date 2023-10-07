@@ -440,6 +440,10 @@ wc_find_or_insert:
 	movq %rdx, %rbx # rbx holds the pointer *inserted
 
 .LfindWordLoop:
+	cmpq $0, %rsi # if s is null, do nothing
+	je .LemptyOrNull
+	cmpb $0, (%rsi) # if s is empty string, do nothing
+	je .LemptyOrNull
 	cmp $0, %r13 # while cursor != null
 	jz .LnotFound
 	movq %r13, %rdi
@@ -479,6 +483,17 @@ wc_find_or_insert:
 	popq %rbx
 	popq %r15
 	popq %r14
+	popq %r13
+	popq %r12
+	addq $8, %rsp 
+	ret
+
+.LemptyOrNull:
+	movq $0, (%rbx)
+	movq %rbx, %rdx
+	popq %rbx	
+	popq %r15
+	popq %r14 	
 	popq %r13
 	popq %r12
 	addq $8, %rsp 
